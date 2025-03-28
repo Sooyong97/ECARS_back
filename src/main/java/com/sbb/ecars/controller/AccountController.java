@@ -46,19 +46,36 @@ public class AccountController {
         result.put("valid", isAvailable);
         return ResponseEntity.ok(result);
     }
-    // 이메일로 ID 찾기
 
     @PostMapping("/findid")
-    public ResponseEntity<Map<String, Object>> findId(@RequestBody String email) {
-        String id = accountService.findIdByEmail(email);
+    public ResponseEntity<Map<String, String>> sendFindIdCode(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String authCode = mailService.generateAuthCode();
+        redisService.saveAuthCode(email, authCode);
+        mailService.sendAuthEmail(email, authCode);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "EMAIL_SENT");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/verifyid")
+    public ResponseEntity<Map<String, Object>> verifyFindIdCode(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String code = request.get("code");
+        String storedCode = redisService.getAuthCode(email);
+
         Map<String, Object> result = new HashMap<>();
-        if (id != null) {
-            result.put("valid", true);
+        if (storedCode != null && storedCode.equals(code)) {
+            String id = accountService.findIdByEmail(email);
+            redisService.deleteAuthCode(email);
+
+            result.put("message", "SUCCESS");
             result.put("id", id);
             return ResponseEntity.ok(result);
         } else {
-            result.put("valid", false);
-            return ResponseEntity.status(404).body(result);
+            result.put("message", "INVALID_CODE");
+            return ResponseEntity.status(400).body(result);
         }
     }
 
