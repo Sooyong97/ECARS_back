@@ -59,6 +59,11 @@ public class AccountService {
         return account.map(Account::getId).orElse("가입된 아이디가 없습니다.");
     }
 
+    public boolean validateUserByIdAndEmail(String id, String email) {
+        Optional<Account> account = accountRepository.findById(id);
+        return account.map(acc -> acc.getEmail().equals(email)).orElse(false);
+    }
+
     // 비밀번호 유효성 검사 메서드
     private boolean isValidPassword(String password) {
         return PASSWORD_PATTERN.matcher(password).matches();

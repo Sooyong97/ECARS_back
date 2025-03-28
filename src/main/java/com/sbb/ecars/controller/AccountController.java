@@ -2,6 +2,8 @@ package com.sbb.ecars.controller;
 
 import com.sbb.ecars.dto.AccountDto;
 import com.sbb.ecars.service.AccountService;
+import com.sbb.ecars.service.MailService;
+import com.sbb.ecars.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,8 @@ import java.util.Map;
 public class AccountController {
 
     private final AccountService accountService;
+    private final MailService mailService;
+    private final RedisService redisService;
 
     // 회원가입
     @PostMapping("/signup")
@@ -25,6 +29,7 @@ public class AccountController {
     }
 
     // ID 중복 확인 API
+
     @PostMapping("/idcheck")
     public ResponseEntity<Map<String, Boolean>> checkId(@RequestBody String id) {
         boolean isAvailable = accountService.isIdAvailable(id);
@@ -32,8 +37,8 @@ public class AccountController {
         result.put("valid", isAvailable);
         return ResponseEntity.ok(result);
     }
-
     // 이메일 중복 확인 API
+
     @PostMapping("/emailcheck")
     public ResponseEntity<Map<String, Boolean>> checkEmail(@RequestBody String email) {
         boolean isAvailable = accountService.isEmailAvailable(email);
@@ -41,8 +46,8 @@ public class AccountController {
         result.put("valid", isAvailable);
         return ResponseEntity.ok(result);
     }
-
     // 이메일로 ID 찾기
+
     @PostMapping("/findid")
     public ResponseEntity<Map<String, Object>> findId(@RequestBody String email) {
         String id = accountService.findIdByEmail(email);
@@ -54,6 +59,41 @@ public class AccountController {
         } else {
             result.put("valid", false);
             return ResponseEntity.status(404).body(result);
+        }
+    }
+
+    @PostMapping("/findpw")
+    public ResponseEntity<Map<String, Boolean>> findPassword(@RequestBody Map<String, String> request) {
+        String id = request.get("id");
+        String email = request.get("email");
+
+        Map<String, Boolean> result = new HashMap<>();
+        if (accountService.validateUserByIdAndEmail(id, email)) {
+            String code = mailService.generateAuthCode();
+            redisService.saveAuthCode(email, code);
+            mailService.sendAuthEmail(email, code);
+            result.put("valid", true);
+            return ResponseEntity.ok(result);
+        } else {
+            result.put("valid", false);
+            return ResponseEntity.status(404).body(result);
+        }
+    }
+
+    @PostMapping("/verifypw")
+    public ResponseEntity<Map<String, String>> verifyPasswordCode(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String code = request.get("code");
+        String storedCode = redisService.getAuthCode(email);
+
+        Map<String, String> response = new HashMap<>();
+        if (storedCode != null && storedCode.equals(code)) {
+            redisService.deleteAuthCode(email);
+            response.put("message", "SUCCESS");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("message", "INVALID_CODE");
+            return ResponseEntity.status(400).body(response);
         }
     }
 }
