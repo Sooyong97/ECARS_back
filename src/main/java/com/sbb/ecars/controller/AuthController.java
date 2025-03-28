@@ -41,14 +41,19 @@ public class AuthController {
 
     // 인증 코드 확인
     @PostMapping("/verify-code")
-    public String verifyAuthCode(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, String>> verifyAuthCode(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         String code = request.get("code");
         String storedCode = redisService.getAuthCode(email);
+
+        Map<String, String> response = new HashMap<>();
         if (storedCode != null && storedCode.equals(code)) {
-            redisService.deleteAuthCode(email); // 인증 코드 사용 후 삭제
-            return "이메일 인증 성공!";
+            redisService.deleteAuthCode(email);
+            response.put("message", "SUCCESS");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("message", "INVALID_CODE");
+            return ResponseEntity.status(400).body(response);
         }
-        return "잘못된 인증 코드입니다.";
     }
 }
