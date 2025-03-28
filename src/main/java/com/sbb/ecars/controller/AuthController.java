@@ -22,11 +22,18 @@ public class AuthController {
 
     // JWT 로그인
     @PostMapping("/signin")
-    public ResponseEntity<String> login(@RequestBody AuthRequestDto request) {
+    public ResponseEntity<Map<String, String>> login(@RequestBody AuthRequestDto request) {
         String token = authService.authenticate(request.getId(), request.getPassword());
-        return token.equals("INVALID_CREDENTIALS") ?
-                ResponseEntity.status(401).body("Invalid Credentials") :
-                ResponseEntity.ok(token);
+        if (token.equals("INVALID_CREDENTIALS")) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "INVALID_CREDENTIALS");
+            return ResponseEntity.status(401).body(error);
+        }
+
+        Map<String, String> response = new HashMap<>();
+        response.put("token", token);
+        response.put("message", "SUCCESS");
+        return ResponseEntity.ok(response);
     }
 
     // 이메일 인증 코드 전송
