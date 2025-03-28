@@ -5,6 +5,8 @@ import com.sbb.ecars.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/accounts")
@@ -15,21 +17,29 @@ public class AccountController {
 
     // 회원가입
     @PostMapping("/signup")
-    public ResponseEntity<String> register(@RequestBody AccountDto accountDto) {
+    public ResponseEntity<Map<String, String>> register(@RequestBody AccountDto accountDto) {
         String response = accountService.registerAccount(accountDto);
-        return ResponseEntity.ok(response);
+        Map<String, String> result = new HashMap<>();
+        result.put("message", response);
+        return ResponseEntity.ok(result);
     }
 
     // ID 중복 확인 API
     @PostMapping("/idcheck")
-    public ResponseEntity<Boolean> checkId(@RequestBody String id) {
-        return ResponseEntity.ok(accountService.isIdAvailable(id));
+    public ResponseEntity<Map<String, Boolean>> checkId(@RequestBody String id) {
+        boolean isAvailable = accountService.isIdAvailable(id);
+        Map<String, Boolean> result = new HashMap<>();
+        result.put("valid", isAvailable);
+        return ResponseEntity.ok(result);
     }
 
     // 이메일 중복 확인 API
     @PostMapping("/emailcheck")
-    public ResponseEntity<Boolean> checkEmail(@RequestBody String email) {
-        return ResponseEntity.ok(accountService.isEmailAvailable(email));
+    public ResponseEntity<Map<String, Boolean>> checkEmail(@RequestBody String email) {
+        boolean isAvailable = accountService.isEmailAvailable(email);
+        Map<String, Boolean> result = new HashMap<>();
+        result.put("valid", isAvailable);
+        return ResponseEntity.ok(result);
     }
 
     // 이메일로 ID 찾기
