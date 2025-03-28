@@ -44,7 +44,16 @@ public class AccountController {
 
     // 이메일로 ID 찾기
     @PostMapping("/findid")
-    public ResponseEntity<String> findId(@RequestBody String email) {
-        return ResponseEntity.ok(accountService.findIdByEmail(email));
+    public ResponseEntity<Map<String, Object>> findId(@RequestBody String email) {
+        String id = accountService.findIdByEmail(email);
+        Map<String, Object> result = new HashMap<>();
+        if (id != null) {
+            result.put("valid", true);
+            result.put("id", id);
+            return ResponseEntity.ok(result);
+        } else {
+            result.put("valid", false);
+            return ResponseEntity.status(404).body(result);
+        }
     }
 }
