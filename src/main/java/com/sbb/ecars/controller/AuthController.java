@@ -31,12 +31,15 @@ public class AuthController {
 
     // 이메일 인증 코드 전송
     @PostMapping("/send-email")
-    public String sendAuthEmail(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, String>> sendAuthEmail(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         String authCode = mailService.generateAuthCode();
         redisService.saveAuthCode(email, authCode);
         mailService.sendAuthEmail(email, authCode);
-        return "인증 코드가 이메일로 전송되었습니다.";
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "EMAIL_SENT");
+        return ResponseEntity.ok(response);
     }
 
     // 인증 코드 확인
