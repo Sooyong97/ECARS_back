@@ -64,6 +64,19 @@ public class AccountService {
         return account.map(acc -> acc.getEmail().equals(email)).orElse(false);
     }
 
+    public boolean updatePassword(String id, String newPassword) {
+        if (!isValidPassword(newPassword)) return false;
+
+        Optional<Account> accountOpt = accountRepository.findById(id);
+        if (accountOpt.isPresent()) {
+            Account account = accountOpt.get();
+            account.setPassword(passwordEncoder.encode(newPassword));
+            accountRepository.save(account);
+            return true;
+        }
+        return false;
+    }
+
     // 비밀번호 유효성 검사 메서드
     private boolean isValidPassword(String password) {
         return PASSWORD_PATTERN.matcher(password).matches();

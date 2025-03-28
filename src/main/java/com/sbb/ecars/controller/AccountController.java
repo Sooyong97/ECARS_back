@@ -113,4 +113,20 @@ public class AccountController {
             return ResponseEntity.status(400).body(response);
         }
     }
+
+    @PostMapping("/changepw")
+    public ResponseEntity<Map<String, String>> changePassword(@RequestBody Map<String, String> request) {
+        String id = request.get("id");
+        String newPassword = request.get("newPassword");
+
+        Map<String, String> response = new HashMap<>();
+
+        if (!accountService.updatePassword(id, newPassword)) {
+            response.put("message", "INVALID_PASSWORD");
+            return ResponseEntity.status(400).body(response);
+        }
+
+        response.put("message", "PASSWORD_UPDATED");
+        return ResponseEntity.ok(response);
+    }
 }
