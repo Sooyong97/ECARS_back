@@ -45,9 +45,10 @@ public class PostService {
     }
 
     // 게시글 업데이트
-    public PostDto updatePost(Long id, String title, String content, MultipartFile file) throws IOException {
+    public PostDto updatePost(Long id, String userId, String title, String content, MultipartFile file) throws IOException {
         Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
 
+        post.setUserId(userId); // update userId as well
         post.setTitle(title);
         post.setContent(content);
 

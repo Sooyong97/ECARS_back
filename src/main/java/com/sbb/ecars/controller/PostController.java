@@ -45,11 +45,12 @@ public class PostController {
     @PutMapping("/{id}")
     public ResponseEntity<PostDto> updatePost(
             @RequestParam Long id,
+            @RequestParam String userId,
             @RequestParam String title,
             @RequestParam String content,
             @RequestParam(required = false) MultipartFile file
     ) throws IOException {
-        return ResponseEntity.ok(postService.updatePost(id, title, content, file));
+        return ResponseEntity.ok(postService.updatePost(id, userId, title, content, file));
     }
 
     // 게시글 삭제

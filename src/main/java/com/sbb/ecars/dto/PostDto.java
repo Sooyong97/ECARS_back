@@ -3,7 +3,7 @@ package com.sbb.ecars.dto;
 import com.sbb.ecars.domain.Post;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -11,22 +11,19 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class PostDto {
-    private Long id;
-    private String userId;
-    private String title;
-    private String content;
-    private LocalDateTime createdAt;
-    private String filePath;
+    private Long pk;
+    private Map<String, Object> fields;
 
     public static PostDto fromEntity(Post post) {
         return PostDto.builder()
-                .id(post.getId())
-                .userId(post.getUserId())
-                .title(post.getTitle())
-                .content(post.getContent())
-                .createdAt(post.getCreatedAt())
-                .filePath(post.getFilePath())
+                .pk(post.getId())
+                .fields(Map.of(
+                    "user_id", post.getUserId(),
+                    "title", post.getTitle(),
+                    "content", post.getContent(),
+                    "created_at", post.getCreatedAt(),
+                    "file_path", post.getFilePath()
+                ))
                 .build();
     }
-
 }
