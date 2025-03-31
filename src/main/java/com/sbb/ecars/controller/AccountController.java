@@ -1,5 +1,6 @@
 package com.sbb.ecars.controller;
 
+import com.sbb.ecars.domain.Account;
 import com.sbb.ecars.dto.AccountDto;
 import com.sbb.ecars.service.AccountService;
 import com.sbb.ecars.service.MailService;
@@ -9,6 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/accounts")
@@ -26,6 +30,23 @@ public class AccountController {
         Map<String, String> result = new HashMap<>();
         result.put("message", response);
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/userJWT")
+    public ResponseEntity<?> getUserInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String id = authentication.getName();
+
+        Optional<Account> user = accountService.findAccountById(id);
+        if (user.isPresent()) {
+            Map<String, String> response = new HashMap<>();
+            response.put("id", user.get().getId());
+            response.put("name", user.get().getName());
+            response.put("email", user.get().getEmail());
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(404).body(Map.of("message", "USER_NOT_FOUND"));
+        }
     }
 
     // ID 중복 확인 API

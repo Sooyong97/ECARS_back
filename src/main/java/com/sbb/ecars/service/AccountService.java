@@ -43,6 +43,10 @@ public class AccountService {
         return "회원가입 성공";
     }
 
+    public Optional<Account> findAccountById(String id) {
+        return accountRepository.findById(id);
+    }
+
     // ID 중복 확인
     public boolean isIdAvailable(String id) {
         return !accountRepository.existsById(id);
