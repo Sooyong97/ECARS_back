@@ -77,9 +77,9 @@ public class WebSocketAudioHandler implements WebSocketHandler {
 
                 // React로 변환된 데이터 전송
                 session.sendMessage(new TextMessage("{"
-                        + "\"incidentType\": \"" + callLogsDto.getCategory() + "\","
-                        + "\"incidentLocation\": \"" + callLogsDto.getLocation() + "\","
-                        + "\"situationDetails\": \"" + callLogsDto.getDetails() + "\"}"));
+                        + "\"log_id\": " + callLogs.getId() + ","
+                        + "\"message\": \"신고가 정상적으로 접수되었습니다.\""
+                        + "}"));
 
             } catch (Exception e) {
                 e.printStackTrace();
