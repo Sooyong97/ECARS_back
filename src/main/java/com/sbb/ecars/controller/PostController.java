@@ -44,7 +44,7 @@ public class PostController {
     // 게시글 업데이트
     @PutMapping("/{id}")
     public ResponseEntity<PostDto> updatePost(
-            @RequestParam Long id,
+            @PathVariable Long id,
             @RequestParam String userId,
             @RequestParam String title,
             @RequestParam String content,
