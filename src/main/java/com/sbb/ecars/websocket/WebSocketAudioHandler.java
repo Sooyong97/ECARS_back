@@ -1,6 +1,7 @@
 package com.sbb.ecars.websocket;
 
 import com.sbb.ecars.domain.CallLogs;
+import com.sbb.ecars.security.JwtTokenProvider;
 import com.sbb.ecars.dto.CallLogsDto;
 import com.sbb.ecars.repository.CallLogsRepository;
 import com.sbb.ecars.service.ClovaSTTService;
@@ -22,15 +23,29 @@ public class WebSocketAudioHandler implements WebSocketHandler {
 
     private final ClovaSTTService clovaSTTService;
     private final CallLogsRepository callLogsRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public WebSocketAudioHandler(ClovaSTTService clovaSTTService, CallLogsRepository callLogsRepository) {
+    public WebSocketAudioHandler(ClovaSTTService clovaSTTService, CallLogsRepository callLogsRepository, JwtTokenProvider jwtTokenProvider) {
         this.clovaSTTService = clovaSTTService;
         this.callLogsRepository = callLogsRepository;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) {
-        System.out.println("WebSocket Connected" + session.getId());
+    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        String token = null;
+        String query = session.getUri().getQuery(); // ex) token=abc.def.ghi
+
+        if (query != null && query.startsWith("token=")) {
+            token = query.substring(6);
+        }
+
+        if (token == null || !jwtTokenProvider.validateToken(token)) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid or missing JWT"));
+            return;
+        }
+
+        System.out.println("WebSocket Connected " + session.getId());
     }
 
     @Override
@@ -63,7 +78,7 @@ public class WebSocketAudioHandler implements WebSocketHandler {
                     fos.write(audioData);
                 }
 
-                System.out.println("✅ Audio File Saved: " + fileName);
+                System.out.println("Audio File Saved: " + fileName);
 
                 // File → MultipartFile 변환
                 MultipartFile multipartFile = convertFileToMultipartFile(audioFile);
