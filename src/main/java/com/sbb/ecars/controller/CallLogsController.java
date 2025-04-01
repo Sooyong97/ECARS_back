@@ -6,7 +6,10 @@ import com.sbb.ecars.repository.CallLogsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -39,6 +42,29 @@ public class CallLogsController {
         List<CallLogsDto> result = callLogsRepository.findByIsDuplicate(isDuplicate).stream()
                 .map(CallLogsDto::fromEntity)
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(result);
+    }
+
+    // 일별 신고 현황
+    @GetMapping("/daystats")
+    public ResponseEntity<Map<String, Long>> getDayStats() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        Map<String, Long> result = callLogsRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        log -> log.getDate().toLocalDate().format(formatter),
+                        Collectors.counting()
+                ));
+        return ResponseEntity.ok(result);
+    }
+
+    // 출동통계 (카테고리별 신고 수)
+    @GetMapping("/categorycount")
+    public ResponseEntity<Map<String, Long>> getCategoryStats() {
+        Map<String, Long> result = callLogsRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        CallLogs::getCategory,
+                        Collectors.counting()
+                ));
         return ResponseEntity.ok(result);
     }
 }
