@@ -6,15 +6,14 @@ import com.sbb.ecars.dto.CallLogsDto;
 import com.sbb.ecars.repository.CallLogsRepository;
 import com.sbb.ecars.service.ClovaSTTService;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.socket.*;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -105,11 +104,47 @@ public class WebSocketAudioHandler implements WebSocketHandler {
     // File → MultipartFile 변환
     private MultipartFile convertFileToMultipartFile(File file) throws Exception {
         FileInputStream inputStream = new FileInputStream(file);
-        return new MockMultipartFile(
-                file.getName(),           // 원본 파일 이름
-                file.getName(),           // 클라이언트에서 보낸 파일 이름
-                MediaType.APPLICATION_OCTET_STREAM_VALUE, // MIME 타입
-                inputStream               // 파일 데이터
-        );
+
+        return new MultipartFile() {
+            @Override
+            public String getName() {
+                return file.getName();
+            }
+
+            @Override
+            public String getOriginalFilename() {
+                return file.getName();
+            }
+
+            @Override
+            public String getContentType() {
+                return MediaType.APPLICATION_OCTET_STREAM_VALUE;
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return file.length() == 0;
+            }
+
+            @Override
+            public long getSize() {
+                return file.length();
+            }
+
+            @Override
+            public byte[] getBytes() throws IOException {
+                return inputStream.readAllBytes();
+            }
+
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return inputStream;
+            }
+
+            @Override
+            public void transferTo(File dest) throws IOException, IllegalStateException {
+                Files.copy(file.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+        };
     }
 }
