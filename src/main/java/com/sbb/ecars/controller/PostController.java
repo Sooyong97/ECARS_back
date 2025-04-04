@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -20,8 +21,9 @@ public class PostController {
 
     // 모든 게시글 가져오기
     @GetMapping
-    public ResponseEntity<List<PostDto>> getAllPosts() {
-        return ResponseEntity.ok(postService.getAllPosts());
+    public ResponseEntity<?> getAllPosts() {
+        List<PostDto> postList = postService.getAllPosts();
+        return ResponseEntity.ok(Map.of("posts", postList));
     }
 
     // 특정 id 게시글 가져오기
