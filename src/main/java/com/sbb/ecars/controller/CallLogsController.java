@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,24 +49,47 @@ public class CallLogsController {
 
     // 일별 신고 현황
     @GetMapping("/daystats")
-    public ResponseEntity<Map<String, Long>> getDayStats() {
+    public ResponseEntity<List<Map<String, Object>>> getDayStats() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        Map<String, Long> result = callLogsRepository.findAll().stream()
+        Map<String, Long> grouped = callLogsRepository.findAll().stream()
+                .filter(log -> !log.isDuplicate())
                 .collect(Collectors.groupingBy(
                         log -> log.getDate().toLocalDate().format(formatter),
                         Collectors.counting()
                 ));
+
+        List<Map<String, Object>> result = grouped.entrySet().stream()
+                .map(e -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("annotated_date", e.getKey());
+                    map.put("count", e.getValue());
+                    return map;
+                })
+                .sorted(Comparator.comparing(m -> (String) m.get("annotated_date")))
+                .collect(Collectors.toList());
+
         return ResponseEntity.ok(result);
     }
 
     // 출동통계 (카테고리별 신고 수)
     @GetMapping("/categorycount")
-    public ResponseEntity<Map<String, Long>> getCategoryStats() {
-        Map<String, Long> result = callLogsRepository.findAll().stream()
+    public ResponseEntity<List<Map<String, Object>>> getCategoryStats() {
+        Map<String, Long> grouped = callLogsRepository.findAll().stream()
                 .collect(Collectors.groupingBy(
                         CallLogs::getCategory,
                         Collectors.counting()
                 ));
+
+        List<Map<String, Object>> result = grouped.entrySet().stream()
+                .map(e -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("category", e.getKey());
+                    map.put("count", e.getValue());
+                    return map;
+                })
+                .sorted(Comparator.comparing(m -> (String) m.get("category")))
+                .collect(Collectors.toList());
+
         return ResponseEntity.ok(result);
     }
 }
