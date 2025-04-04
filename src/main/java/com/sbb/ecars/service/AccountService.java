@@ -6,6 +6,7 @@ import com.sbb.ecars.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -23,13 +24,14 @@ public class AccountService {
     private static final Pattern PASSWORD_PATTERN = Pattern.compile(PASSWORD_REGEX);
 
     // 회원 가입
-    public String registerAccount(AccountDto dto) {
+    @Transactional
+    public int registerAccount(AccountDto dto) {
         if (accountRepository.findByEmail(dto.getEmail()).isPresent()) {
-            return "이미 존재하는 이메일입니다.";
+            return 1;  // 이미 존재하는 이메일
         }
 
         if (!isValidPassword(dto.getPassword())) {
-            return "비밀번호는 최소 8자 이상, 대문자, 소문자, 숫자, 특수문자를 포함해야 합니다.";
+            return 0;  // 비밀번호 유효성 실패
         }
 
         Account newAccount = Account.builder()
@@ -40,7 +42,7 @@ public class AccountService {
                 .isAdmin(false)
                 .build();
         accountRepository.save(newAccount);
-        return "회원가입 성공";
+        return 2;  // 성공
     }
 
     public Optional<Account> findAccountById(String id) {
