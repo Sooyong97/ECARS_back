@@ -14,10 +14,22 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Optional;
 
-@RestController
-@RequestMapping("/api/accounts")
 @RequiredArgsConstructor
+@RequestMapping("/api/accounts")
+@RestController
 public class AccountController {
+
+    static class IdRequestDto {
+        private String id;
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
+    }
+
+    static class EmailRequestDto {
+        private String email;
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+    }
 
     private final AccountService accountService;
     private final MailService mailService;
@@ -25,11 +37,20 @@ public class AccountController {
 
     // 회원가입
     @PostMapping("/signup")
-    public ResponseEntity<Map<String, String>> register(@RequestBody AccountDto accountDto) {
-        String response = accountService.registerAccount(accountDto);
-        Map<String, String> result = new HashMap<>();
-        result.put("message", response);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<Map<String, Object>> register(@RequestBody AccountDto accountDto) {
+        int resultCode = accountService.registerAccount(accountDto);
+        Map<String, Object> result = new HashMap<>();
+
+        if (resultCode == 1) {
+            result.put("errorCode", 1);
+            return ResponseEntity.status(400).body(result);
+        } else if (resultCode == 0) {
+            result.put("errorCode", 0);
+            return ResponseEntity.status(400).body(result);
+        } else {
+            result.put("message", "회원가입 성공");
+            return ResponseEntity.ok(result);
+        }
     }
 
     @PostMapping("/userJWT")
@@ -39,10 +60,11 @@ public class AccountController {
 
         Optional<Account> user = accountService.findAccountById(id);
         if (user.isPresent()) {
-            Map<String, String> response = new HashMap<>();
+            Map<String, Object> response = new HashMap<>();
             response.put("id", user.get().getId());
             response.put("name", user.get().getName());
             response.put("email", user.get().getEmail());
+            response.put("is_admin", user.get().isAdmin());
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.status(404).body(Map.of("message", "USER_NOT_FOUND"));
@@ -50,10 +72,9 @@ public class AccountController {
     }
 
     // ID 중복 확인 API
-
     @PostMapping("/idcheck")
-    public ResponseEntity<Map<String, Boolean>> checkId(@RequestBody String id) {
-        boolean isAvailable = accountService.isIdAvailable(id);
+    public ResponseEntity<Map<String, Boolean>> checkId(@RequestBody IdRequestDto dto) {
+        boolean isAvailable = accountService.isIdAvailable(dto.getId());
         Map<String, Boolean> result = new HashMap<>();
         result.put("valid", isAvailable);
         return ResponseEntity.ok(result);
@@ -61,8 +82,8 @@ public class AccountController {
     // 이메일 중복 확인 API
 
     @PostMapping("/emailcheck")
-    public ResponseEntity<Map<String, Boolean>> checkEmail(@RequestBody String email) {
-        boolean isAvailable = accountService.isEmailAvailable(email);
+    public ResponseEntity<Map<String, Boolean>> checkEmail(@RequestBody EmailRequestDto dto) {
+        boolean isAvailable = accountService.isEmailAvailable(dto.getEmail());
         Map<String, Boolean> result = new HashMap<>();
         result.put("valid", isAvailable);
         return ResponseEntity.ok(result);
