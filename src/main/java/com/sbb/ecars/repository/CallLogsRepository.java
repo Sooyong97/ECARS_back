@@ -8,6 +8,5 @@ import java.util.List;
 
 @Repository
 public interface CallLogsRepository extends JpaRepository<CallLogs, Long> {
-    List<CallLogs> findByCaller(String category);
     List<CallLogs> findByIsDuplicate(Boolean isDuplicate);
 }
